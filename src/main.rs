@@ -1,5 +1,5 @@
 use gtk::prelude::*;
-use gtk::{glib, Application, ApplicationWindow, Builder, Entry, Button, ListBox, ListBoxRow};
+use gtk::{Application, ApplicationWindow, Builder, Button, Entry, ListBox, ListBoxRow, glib};
 
 const GLADE_UI: &str = include_str!("window.glade");
 
@@ -49,16 +49,41 @@ fn build_ui(app: &Application) {
             .object("delete_button")
             .expect("Could not find delete_button");
 
+        let up_button: Button = temporary_builder
+            .object("up_button")
+            .expect("Could not find up_button");
+
+        let down_button: Button = temporary_builder
+            .object("down_button")
+            .expect("Could not find down_button");
+
         let entered_text: String = task_entry.property("text");
         task_entry.set_property("text", "");
         task_text.set_property("text", &entered_text);
 
         task_list.add(&task_placeholder);
 
-        delete_button.connect_clicked(move |_| {
-            unsafe {
-                task_placeholder.destroy();
+        let task_clone = task_placeholder.clone();
+        let task_list_clone = task_list.clone();
+        up_button.connect_clicked(move |_| {
+            let current_position = task_clone.index();
+            if current_position != 0 {
+                task_list_clone.remove(&task_clone);
+                task_list_clone.insert(&task_clone, current_position - 1);
             }
+        });
+
+        let task_clone = task_placeholder.clone();
+        let task_list_clone = task_list.clone();
+        down_button.connect_clicked(move |_| {
+            let current_position = task_clone.index();
+            // The entry just won't move, no need for an if
+            task_list_clone.remove(&task_clone);
+            task_list_clone.insert(&task_clone, current_position + 1);
+        });
+
+        delete_button.connect_clicked(move |_| unsafe {
+            task_placeholder.destroy();
         });
     });
 
